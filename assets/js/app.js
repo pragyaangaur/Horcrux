@@ -151,7 +151,7 @@ function burn() {
   dom.stage.replaceChildren();
   const empty = document.createElement("p");
   empty.className = "memories__empty";
-  empty.textContent = "Nothing has been written here for fifty years.";
+  empty.textContent = "Nothing has been written here in a long time.";
   dom.memories.appendChild(empty);
   dom.memoriesEmpty = empty;
   scribe.say(opened ? "voice" : "note", opened
