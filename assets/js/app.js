@@ -20,7 +20,14 @@ const dom = {
   sound: el("soundBtn"),
   meter: el("meter"),
   meterFill: el("meterFill"),
-  meterLabel: el("meterLabel")
+  meterLabel: el("meterLabel"),
+  crier: el("crier")
+};
+
+const PLACEHOLDERS = {
+  shut: "The book is shut.",
+  busy: "The ink is busy.",
+  ready: "Write something. Anything."
 };
 
 const scribe = new Scribe(dom.stage);
@@ -68,7 +75,8 @@ async function open() {
   const first = dom.stage.querySelector(".line--note");
   if (first) scribe.sink(first, 200);
 
-  await scribe.say("riddle", anyOf(OPENING));
+  const hello = await scribe.say("riddle", anyOf(OPENING));
+  cry(hello.text);
   lock(false);
   dom.pen.focus();
 }
@@ -103,6 +111,7 @@ async function submit(event) {
   }
 
   pending.push({ el: writer.el, kind: "riddle", text: said.trim() });
+  cry(said.trim());
   setLamp("awake");
   busy = false;
   lock(false);
@@ -170,6 +179,22 @@ function shorten(text) {
 function lock(state) {
   dom.pen.disabled = state;
   dom.send.disabled = state;
+  if (!opened) setPlaceholder("shut");
+  else setPlaceholder(state ? "busy" : "ready");
+}
+
+function setPlaceholder(state) {
+  dom.pen.placeholder = PLACEHOLDERS[state] || PLACEHOLDERS.ready;
+}
+
+/* Handwriting arrives one glyph at a time, which is unusable for a screen reader.
+   Finished lines are repeated once here instead. */
+function cry(text) {
+  if (!text) return;
+  const p = document.createElement("p");
+  p.textContent = `Riddle wrote: ${text}`;
+  dom.crier.appendChild(p);
+  while (dom.crier.childElementCount > 6) dom.crier.firstElementChild.remove();
 }
 
 function setLamp(state) {
