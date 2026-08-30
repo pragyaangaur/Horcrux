@@ -3,7 +3,7 @@
    A language model downloads in the background and takes over when it arrives. If it never
    arrives, because there is no WebGPU or the fetch fails, the Shade keeps the diary going. */
 
-import { SYSTEM_PROMPT, PRIMER, Shade } from "./persona.js";
+import { SYSTEM_PROMPT, PRIMER, Shade, readName, reminder } from "./persona.js";
 
 const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm";
 
@@ -45,6 +45,7 @@ export class Voice {
     this.model = null;
     this.shade = new Shade();
     this.history = [];
+    this.writer = null;
   }
 
   get ready() {
@@ -133,8 +134,12 @@ export class Voice {
       return;
     }
 
+    this.writer = this.writer || readName(text);
+
+    /* web-llm only accepts a system message as the first one, so the reminder is folded
+       into the prompt and the writer's name goes with it. */
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: `${SYSTEM_PROMPT}\n\n${reminder(this.writer)}` },
       ...PRIMER,
       ...this.history.slice(-TURNS),
       { role: "user", content: text }
@@ -148,6 +153,7 @@ export class Voice {
         temperature: 0.7,
         top_p: 0.9,
         frequency_penalty: 0.3,
+        presence_penalty: 0,
         max_tokens: 110
       });
       for await (const chunk of chunks) {
@@ -174,6 +180,7 @@ export class Voice {
 
   forget() {
     this.history = [];
+    this.writer = null;
     this.shade.forget();
   }
 }

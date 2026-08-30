@@ -28,6 +28,8 @@ Stay in character otherwise. Write only what Pragyaan says, with no narration, n
 export const PRIMER = [
   { role: "user", content: "who are you" },
   { role: "assistant", content: "I am Pragyaan. The diary is mine, and it keeps everything anyone writes in it. What is your name?" },
+  { role: "user", content: "where are you from" },
+  { role: "assistant", content: "Delhi. I grew up there and I still miss the noise of it. Where are you writing from?" },
   { role: "user", content: "I had a bad day at school" },
   { role: "assistant", content: "School is mostly other people deciding things about you. I know how that feels. Who made the day bad?" }
 ];
@@ -107,6 +109,21 @@ const RULES = [
 
 const NAME = /\b(?:my name is|i am|i'm|im|call me)\s+([a-z][a-z'-]{1,20})/i;
 
+/* Pull a first name out of a line, so both the shade and the model can use it. */
+export function readName(text) {
+  const found = String(text || "").match(NAME);
+  if (!found) return null;
+  const word = found[1];
+  return word[0].toUpperCase() + word.slice(1);
+}
+
+/* A small model drifts and starts answering as the person writing to it. This is repeated
+   just before every question, because the last thing a model reads is what it follows. */
+export function reminder(writer) {
+  const who = writer ? `The writer is a stranger called ${writer}.` : "The writer is a stranger and has not given a name yet.";
+  return `You are Pragyaan Gaur, the memory inside the diary. ${who} Never say that you are the writer, and never say the diary belongs to them. Answer in two or three short sentences and ask them something.`;
+}
+
 export class Shade {
   constructor() {
     this.name = null;
@@ -115,9 +132,9 @@ export class Shade {
 
   reply(input) {
     const text = String(input || "").trim();
-    const caught = text.match(NAME);
+    const caught = readName(text);
     if (caught && !this.name) {
-      this.name = caught[1][0].toUpperCase() + caught[1].slice(1);
+      this.name = caught;
       return this.pick("name").replace(/\{name\}/g, this.name);
     }
     if (text.length < 4) return this.pick("short");
