@@ -8,6 +8,13 @@ export class Scribe {
   constructor(stage) {
     this.stage = stage;
     this.audio = null;
+    this.active = new Set();
+
+    /* A hidden tab throttles timers to one a second, or one a minute after a while, so a
+       line left half drawn stays half drawn. Anything in flight is finished at once instead. */
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) for (const writer of this.active) writer.flush();
+    });
   }
 
   /* Start a new line on the page. The returned writer accepts text at any time. */
@@ -19,7 +26,9 @@ export class Scribe {
     el.appendChild(nib);
     this.stage.appendChild(el);
     this.stage.scrollTop = this.stage.scrollHeight;
-    return new Writer(this, el, nib, SPEED[kind] ?? 30);
+    const writer = new Writer(this, el, nib, SPEED[kind] ?? 30);
+    this.active.add(writer);
+    return writer;
   }
 
   /* Write a whole string and wait for the last glyph to dry. */
@@ -88,6 +97,7 @@ class Writer {
     this.timer = null;
     this.text = "";
     this.drawn = "";
+    this.done = false;
     this.finished = new Promise((resolve) => { this.resolve = resolve; });
   }
 
@@ -95,12 +105,24 @@ class Writer {
     if (!chunk) return;
     this.text += chunk;
     for (const ch of chunk) this.queue.push(ch);
-    if (!this.timer) this.tick();
+    if (document.hidden) this.flush();
+    else if (!this.timer) this.tick();
+  }
+
+  /* Put everything that is queued on the page immediately. */
+  flush() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    while (this.queue.length) this.draw(this.queue.shift());
+    if (this.closed) this.end();
   }
 
   close() {
     this.closed = true;
-    if (!this.timer && this.queue.length === 0) this.end();
+    if (document.hidden) this.flush();
+    else if (!this.timer && this.queue.length === 0) this.end();
   }
 
   tick() {
@@ -147,7 +169,10 @@ class Writer {
   }
 
   end() {
+    if (this.done) return;
+    this.done = true;
     this.nib.remove();
+    this.scribe.active.delete(this);
     this.resolve(this.text);
   }
 }
