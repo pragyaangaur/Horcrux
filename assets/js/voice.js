@@ -26,6 +26,10 @@ function order(name) {
 
 const TURNS = 8;
 
+/* The first few words of a reply are held back before they reach the page. It is the only
+   place a small model steals the writer's name, and once ink is on the page it stays. */
+const HOLD = 60;
+
 /* A short list of phrases that should never be answered in character. */
 const CRISIS = /\b(kill myself|killing myself|end my life|suicide|suicidal|want to die|hurt myself|self harm|cut myself|no reason to live)\b/i;
 
@@ -145,7 +149,9 @@ export class Voice {
       { role: "user", content: text }
     ];
 
-    let reply = "";
+    let out = "";
+    let head = "";
+    let holding = true;
     try {
       const chunks = await this.engine.chat.completions.create({
         messages,
@@ -159,17 +165,31 @@ export class Voice {
       for await (const chunk of chunks) {
         const piece = chunk.choices?.[0]?.delta?.content || "";
         if (!piece) continue;
-        reply += piece;
+        if (holding) {
+          head += piece;
+          if (head.length < HOLD) continue;
+          holding = false;
+          const fixed = ownName(head, this.writer);
+          out += fixed;
+          yield fixed;
+          continue;
+        }
+        out += piece;
         yield piece;
+      }
+      if (holding) {
+        const fixed = ownName(head, this.writer);
+        out += fixed;
+        yield fixed;
       }
     } catch (error) {
       console.warn("generation failed, falling back to the shade", error);
       const fallback = this.shade.reply(text);
-      reply = fallback;
+      out = fallback;
       yield fallback;
     }
 
-    this.remember(text, clean(reply));
+    this.remember(text, clean(out));
   }
 
   remember(user, assistant) {
@@ -183,6 +203,15 @@ export class Voice {
     this.writer = null;
     this.shade.forget();
   }
+}
+
+/* Give the voice its own name back when the model has borrowed the writer's. */
+function ownName(text, writer) {
+  if (!writer) return text;
+  const name = writer.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return String(text)
+    .replace(new RegExp(`\\bI(?:'m| am) ${name}\\b`, "gi"), "I am Pragyaan")
+    .replace(new RegExp(`\\bmy name is ${name}\\b`, "gi"), "my name is Pragyaan");
 }
 
 /* Small models like to add narration and quotation marks. Strip the obvious ones. */
