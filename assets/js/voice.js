@@ -22,7 +22,7 @@ export function looksLikeCrisis(text) {
   return CRISIS.test(String(text || ""));
 }
 
-export const CRISIS_REPLY = "The ink stops here. This part is not a game, and I am only a page. Please talk to someone you trust tonight, or a local crisis line, and stay with people who know your name.";
+export const CRISIS_REPLY = "I am stopping the game here. I am only a page in a book, and this part is real. Please talk to someone you trust tonight, or call a local crisis line, and stay near people who know your name.";
 
 export class Voice {
   constructor({ onProgress } = {}) {
@@ -108,9 +108,10 @@ export class Voice {
       const chunks = await this.engine.chat.completions.create({
         messages,
         stream: true,
-        temperature: 0.9,
-        top_p: 0.95,
-        max_tokens: 180
+        temperature: 0.7,
+        top_p: 0.9,
+        frequency_penalty: 0.3,
+        max_tokens: 110
       });
       for await (const chunk of chunks) {
         const piece = chunk.choices?.[0]?.delta?.content || "";

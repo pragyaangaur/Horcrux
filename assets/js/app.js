@@ -149,7 +149,7 @@ function burn() {
   dom.memories.appendChild(empty);
   dom.memoriesEmpty = empty;
   scribe.say(opened ? "voice" : "note", opened
-    ? "You have burned the page. I do not mind. I am the book, not the page."
+    ? "You burned the page. I do not mind. I am the book, and the page was only paper."
     : "The page is blank. It has been blank for a very long time.");
 }
 
