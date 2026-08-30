@@ -42,7 +42,7 @@ export class Riddle {
   async awaken() {
     if (this.ready) return this.mode;
 
-    if (!("gpu" in navigator)) {
+    if (!navigator.gpu) {
       this.onProgress({ text: "No WebGPU here. The shade will answer instead.", ratio: 1 });
       this.mode = "shade";
       return this.mode;

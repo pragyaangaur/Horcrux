@@ -87,6 +87,7 @@ class Writer {
     this.closed = false;
     this.timer = null;
     this.text = "";
+    this.drawn = "";
     this.finished = new Promise((resolve) => { this.resolve = resolve; });
   }
 
@@ -116,16 +117,18 @@ class Writer {
     }, this.pause());
   }
 
-  /* Handwriting is uneven. Punctuation gets a longer rest than a letter does. */
+  /* Handwriting is uneven. Punctuation gets a longer rest than a letter does.
+     The rest depends on the last glyph already on the page, not on the text still queued. */
   pause() {
     const base = this.speed;
-    const last = this.text.slice(-1);
+    const last = this.drawn.slice(-1);
     if (".!?".includes(last)) return base * 9;
     if (",;:".includes(last)) return base * 4;
     return base * (0.7 + Math.random() * 0.8);
   }
 
   draw(ch) {
+    this.drawn += ch;
     if (ch === "\n") {
       this.el.insertBefore(document.createElement("br"), this.nib);
       return;
