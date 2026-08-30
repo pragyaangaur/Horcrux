@@ -101,6 +101,7 @@ class Writer {
     this.text = "";
     this.drawn = "";
     this.done = false;
+    this.since = 0;
     this.instant = STILL.matches;
     this.finished = new Promise((resolve) => { this.resolve = resolve; });
   }
@@ -169,13 +170,21 @@ class Writer {
     span.style.animationDelay = `${Math.random() * 40}ms`;
     this.el.insertBefore(span, this.nib);
     if (Math.random() < 0.34) this.scribe.scratch();
-    this.scribe.stage.scrollTop = this.scribe.stage.scrollHeight;
+
+    /* Reading scrollHeight forces the browser to lay the page out again, and doing that on
+       every letter is the most expensive part of writing a long reply. */
+    this.since += 1;
+    if (this.since >= 8) {
+      this.since = 0;
+      this.scribe.stage.scrollTop = this.scribe.stage.scrollHeight;
+    }
   }
 
   end() {
     if (this.done) return;
     this.done = true;
     this.nib.remove();
+    this.scribe.stage.scrollTop = this.scribe.stage.scrollHeight;
     this.scribe.active.delete(this);
     this.resolve(this.text);
   }
