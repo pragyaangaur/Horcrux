@@ -210,16 +210,35 @@ function warmLater() {
   else setTimeout(start, 1200);
 }
 
-/* The size lives in the address, so a link can carry it and a reload keeps it. */
+const SIZE_KEY = "horcrux.voice";
+
+/* The address wins, so a link can carry a size. Failing that the book uses whatever the
+   reader picked last, which matters most to anyone on a slow connection. */
 function chosenSize() {
   const asked = new URLSearchParams(location.search).get("voice");
-  return VOICES.some((entry) => entry.name === asked) ? asked : DEFAULT_VOICE;
+  if (VOICES.some((entry) => entry.name === asked)) return asked;
+  const saved = readSize();
+  return saved || DEFAULT_VOICE;
+}
+
+function readSize() {
+  try {
+    const saved = localStorage.getItem(SIZE_KEY);
+    return VOICES.some((entry) => entry.name === saved) ? saved : null;
+  } catch (error) {
+    return null;
+  }
 }
 
 /* The sizes are a page reload apart, because the model is chosen before it loads. */
 function switchVoice() {
   const names = VOICES.map((entry) => entry.name);
   const next = names[(names.indexOf(size) + 1) % names.length];
+  try {
+    localStorage.setItem(SIZE_KEY, next);
+  } catch (error) {
+    /* The address still carries the choice for this visit. */
+  }
   const url = new URL(location.href);
   url.searchParams.set("voice", next);
   location.href = url.toString();
