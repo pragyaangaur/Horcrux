@@ -4,6 +4,7 @@
    arrives, because there is no WebGPU or the fetch fails, the Shade keeps the diary going. */
 
 import { SYSTEM_PROMPT, PRIMER, Shade, readName, reminder } from "./persona.js";
+import { Ledger } from "./ledger.js";
 
 const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm";
 
@@ -48,6 +49,7 @@ export class Voice {
     this.mode = "asleep";
     this.model = null;
     this.shade = new Shade();
+    this.ledger = new Ledger();
     this.history = [];
     this.writer = null;
   }
@@ -131,6 +133,11 @@ export class Voice {
       return;
     }
 
+    /* The book learns from every line, including the ones the shade answers, so nothing is
+       lost if the model arrives in the middle of a conversation. */
+    this.ledger.learn(text);
+    this.writer = this.ledger.name || this.writer || readName(text);
+
     if (this.mode !== "model") {
       const reply = this.shade.reply(text);
       this.remember(text, reply);
@@ -138,12 +145,10 @@ export class Voice {
       return;
     }
 
-    this.writer = this.writer || readName(text);
-
     /* web-llm only accepts a system message as the first one, so the reminder is folded
        into the prompt and the writer's name goes with it. */
     const messages = [
-      { role: "system", content: `${SYSTEM_PROMPT}\n\n${reminder(this.writer)}` },
+      { role: "system", content: `${SYSTEM_PROMPT}\n\n${reminder(this.writer, this.ledger.note())}` },
       ...PRIMER,
       ...this.history.slice(-TURNS),
       { role: "user", content: text }
@@ -201,6 +206,7 @@ export class Voice {
   forget() {
     this.history = [];
     this.writer = null;
+    this.ledger.forget();
     this.shade.forget();
   }
 }

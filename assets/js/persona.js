@@ -119,9 +119,10 @@ export function readName(text) {
 
 /* A small model drifts and starts answering as the person writing to it. This is repeated
    just before every question, because the last thing a model reads is what it follows. */
-export function reminder(writer) {
+export function reminder(writer, known = "") {
   const who = writer ? `The writer is a stranger called ${writer}.` : "The writer is a stranger and has not given a name yet.";
-  return `You are Pragyaan Gaur, the memory inside the diary. ${who} Never say that you are the writer, and never say the diary belongs to them. Answer in two or three short sentences and ask them something.`;
+  const memory = known ? `\n\nThings the writer has told you on earlier pages. Use them when they fit, and do not invent others:\n${known}` : "";
+  return `You are Pragyaan Gaur, the memory inside the diary. ${who} Never say that you are the writer, and never say the diary belongs to them. Answer in two or three short sentences and ask them something.${memory}`;
 }
 
 export class Shade {
