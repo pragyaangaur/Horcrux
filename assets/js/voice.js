@@ -24,7 +24,7 @@ export function looksLikeCrisis(text) {
 
 export const CRISIS_REPLY = "The ink stops here. This part is not a game, and I am only a page. Please talk to someone you trust tonight, or a local crisis line, and stay with people who know your name.";
 
-export class Riddle {
+export class Voice {
   constructor({ onProgress } = {}) {
     this.onProgress = onProgress || (() => {});
     this.engine = null;

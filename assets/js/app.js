@@ -1,7 +1,7 @@
 /* Wiring. The page, the ink and the thing in the book are joined together here. */
 
 import { Scribe, growWithText } from "./ink.js";
-import { Riddle } from "./riddle.js";
+import { Voice } from "./voice.js";
 import { OPENING, WAKING, anyOf } from "./persona.js";
 
 const el = (id) => document.getElementById(id);
@@ -31,7 +31,7 @@ const PLACEHOLDERS = {
 };
 
 const scribe = new Scribe(dom.stage);
-const riddle = new Riddle({ onProgress: showProgress });
+const voice = new Voice({ onProgress: showProgress });
 
 let busy = false;
 let opened = false;
@@ -67,7 +67,7 @@ async function open() {
   dom.stage.replaceChildren();
   await scribe.say("note", anyOf(WAKING));
 
-  const mode = await riddle.awaken();
+  const mode = await voice.awaken();
   dom.meter.hidden = true;
   setLamp("awake");
   dom.awaken.textContent = mode === "model" ? "The diary is open" : "The shade is listening";
@@ -75,9 +75,9 @@ async function open() {
   const first = dom.stage.querySelector(".line--note");
   if (first) scribe.sink(first, 200);
 
-  const hello = await scribe.say("riddle", anyOf(OPENING));
+  const hello = await scribe.say("voice", anyOf(OPENING));
   cry(hello.text);
-  pending.push({ el: hello.el, kind: "riddle", text: hello.text });
+  pending.push({ el: hello.el, kind: "voice", text: hello.text });
   lock(false);
   dom.pen.focus();
 }
@@ -85,7 +85,7 @@ async function open() {
 async function submit(event) {
   event.preventDefault();
   const text = dom.pen.value.trim();
-  if (!text || busy || !riddle.ready) return;
+  if (!text || busy || !voice.ready) return;
 
   busy = true;
   lock(true);
@@ -99,10 +99,10 @@ async function submit(event) {
   pending.push({ el: yours.el, kind: "you", text });
 
   setLamp("thinking");
-  const writer = scribe.open("riddle");
+  const writer = scribe.open("voice");
   let said = "";
   try {
-    for await (const piece of riddle.stream(text)) {
+    for await (const piece of voice.stream(text)) {
       said += piece;
       writer.push(piece);
     }
@@ -111,7 +111,7 @@ async function submit(event) {
     await writer.finished;
   }
 
-  pending.push({ el: writer.el, kind: "riddle", text: said.trim() });
+  pending.push({ el: writer.el, kind: "voice", text: said.trim() });
   cry(said.trim());
   setLamp("awake");
   busy = false;
@@ -139,7 +139,7 @@ function remember(kind, text) {
 }
 
 function burn() {
-  riddle.forget();
+  voice.forget();
   pending = [];
   dom.memories.replaceChildren();
   dom.stage.replaceChildren();
@@ -148,7 +148,7 @@ function burn() {
   empty.textContent = "Nothing has been written here for fifty years.";
   dom.memories.appendChild(empty);
   dom.memoriesEmpty = empty;
-  scribe.say(opened ? "riddle" : "note", opened
+  scribe.say(opened ? "voice" : "note", opened
     ? "You have burned the page. I do not mind. I am the book, not the page."
     : "The page is blank. It has been blank for a very long time.");
 }
@@ -193,7 +193,7 @@ function setPlaceholder(state) {
 function cry(text) {
   if (!text) return;
   const p = document.createElement("p");
-  p.textContent = `Riddle wrote: ${text}`;
+  p.textContent = `The diary wrote: ${text}`;
   dom.crier.appendChild(p);
   while (dom.crier.childElementCount > 6) dom.crier.firstElementChild.remove();
 }

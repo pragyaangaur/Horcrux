@@ -2,7 +2,7 @@
    Text is drawn one glyph at a time from a queue, so a streaming model and a fixed
    string can both be written with the same code. */
 
-const SPEED = { you: 16, riddle: 34, note: 22 };
+const SPEED = { you: 16, voice: 34, note: 22 };
 
 export class Scribe {
   constructor(stage) {
@@ -11,7 +11,7 @@ export class Scribe {
   }
 
   /* Start a new line on the page. The returned writer accepts text at any time. */
-  open(kind = "riddle") {
+  open(kind = "voice") {
     const el = document.createElement("p");
     el.className = `line line--${kind}`;
     const nib = document.createElement("span");
