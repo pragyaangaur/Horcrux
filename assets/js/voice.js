@@ -65,8 +65,14 @@ export class Voice {
      the model is fetched behind it, because nobody should watch a download to say hello. */
   open() {
     if (this.mode === "asleep") this.mode = "shade";
-    this.loading = this.loading || this.load();
+    this.start();
     return this.mode;
+  }
+
+  /* Begin the download without opening the book. Safe to call as often as you like. */
+  start() {
+    this.loading = this.loading || this.load();
+    return this.loading;
   }
 
   /* Fetch the model and switch to it when it is there. Returns the mode that ended up in use. */

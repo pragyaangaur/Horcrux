@@ -50,6 +50,11 @@ warmLater();
 scribe.say("note", "The page is blank. It has been blank for a very long time.");
 
 dom.awaken.addEventListener("click", open);
+
+/* Reaching for the cover is a good sign that the book is about to be opened, so the weights
+   start arriving a second or two before the click. */
+dom.awaken.addEventListener("pointerenter", () => voice.start(), { once: true });
+dom.awaken.addEventListener("focus", () => voice.start(), { once: true });
 dom.forget.addEventListener("click", burn);
 dom.sound.addEventListener("click", toggleSound);
 dom.deep.addEventListener("click", switchVoice);
