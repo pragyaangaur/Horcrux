@@ -16,7 +16,9 @@ export const VOICES = [
   { name: "deep", id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", megabytes: 800 }
 ];
 
-export const DEFAULT_VOICE = "normal";
+/* The deep model is the default because the shade covers the download, so the wait costs the
+   reader nothing, and because the smaller models ignore the note the book keeps about them. */
+export const DEFAULT_VOICE = "deep";
 
 /* The chosen size first, then the smaller ones, so a failed load falls back to a cheaper try. */
 function order(name) {
