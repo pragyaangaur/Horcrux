@@ -21,7 +21,8 @@ const dom = {
   meter: el("meter"),
   meterFill: el("meterFill"),
   meterLabel: el("meterLabel"),
-  crier: el("crier")
+  crier: el("crier"),
+  deep: el("deep")
 };
 
 const PLACEHOLDERS = {
@@ -31,7 +32,8 @@ const PLACEHOLDERS = {
 };
 
 const scribe = new Scribe(dom.stage);
-const voice = new Voice({ onProgress: showProgress });
+const deep = new URLSearchParams(location.search).get("voice") === "deep";
+const voice = new Voice({ onProgress: showProgress, deep });
 
 let busy = false;
 let opened = false;
@@ -41,11 +43,14 @@ let pending = [];
 setLamp("dormant");
 lock(true);
 growWithText(dom.pen);
+dom.deep.textContent = deep ? "Lighter voice" : "Deeper voice";
+warmLater();
 scribe.say("note", "The page is blank. It has been blank for a very long time.");
 
 dom.awaken.addEventListener("click", open);
 dom.forget.addEventListener("click", burn);
 dom.sound.addEventListener("click", toggleSound);
+dom.deep.addEventListener("click", switchVoice);
 dom.quill.addEventListener("submit", submit);
 
 dom.pen.addEventListener("keydown", (event) => {
@@ -59,6 +64,7 @@ async function open() {
   if (opened) return;
   opened = true;
   dom.awaken.disabled = true;
+  dom.deep.disabled = true;
   dom.awaken.textContent = "Opening";
   dom.diary.classList.remove("is-shut");
   setLamp("stirring");
@@ -151,6 +157,21 @@ function burn() {
   scribe.say(opened ? "voice" : "note", opened
     ? "You burned the page. I do not mind. I am the book, and the page was only paper."
     : "The page is blank. It has been blank for a very long time.");
+}
+
+/* The book is shut for at least a few seconds, so the loader can be fetched in that gap. */
+function warmLater() {
+  const start = () => voice.warm();
+  if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 2500 });
+  else setTimeout(start, 1200);
+}
+
+/* The two sizes are a page reload apart, because the model is chosen before it loads. */
+function switchVoice() {
+  const url = new URL(location.href);
+  if (deep) url.searchParams.delete("voice");
+  else url.searchParams.set("voice", "deep");
+  location.href = url.toString();
 }
 
 function toggleSound() {

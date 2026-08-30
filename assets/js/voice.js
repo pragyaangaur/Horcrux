@@ -7,11 +7,15 @@ import { SYSTEM_PROMPT, PRIMER, Shade } from "./persona.js";
 
 const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm";
 
-/* Ordered by preference. The second one is small enough for a phone or a weak GPU. */
+/* The first load is the slow part, so the default is the smallest model that still holds
+   a character. The deeper one writes better and costs twice the download, and it is only
+   used when the reader asks for it. */
 export const MODELS = [
-  { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", size: "about 800 MB" },
-  { id: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", size: "about 400 MB" }
+  { id: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", size: "about 400 MB" },
+  { id: "SmolLM2-360M-Instruct-q4f16_1-MLC", size: "about 250 MB" }
 ];
+
+export const DEEP_MODEL = { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", size: "about 800 MB" };
 
 const TURNS = 8;
 
@@ -25,8 +29,9 @@ export function looksLikeCrisis(text) {
 export const CRISIS_REPLY = "I am stopping the game here. I am only a page in a book, and this part is real. Please talk to someone you trust tonight, or call a local crisis line, and stay near people who know your name.";
 
 export class Voice {
-  constructor({ onProgress } = {}) {
+  constructor({ onProgress, deep = false } = {}) {
     this.onProgress = onProgress || (() => {});
+    this.candidates = deep ? [DEEP_MODEL, ...MODELS] : MODELS;
     this.engine = null;
     this.mode = "asleep";
     this.model = null;
@@ -36,6 +41,16 @@ export class Voice {
 
   get ready() {
     return this.mode === "model" || this.mode === "shade";
+  }
+
+  /* Fetch the loader while the reader is still looking at the closed book. The library and
+     its wasm are a few megabytes on their own, and this takes them off the critical path.
+     The promise is kept so that awaken reuses it instead of importing a second time. */
+  warm() {
+    if (!this.library && navigator.gpu) {
+      this.library = import(/* @vite-ignore */ WEBLLM_URL).catch(() => null);
+    }
+    return this.library;
   }
 
   /* Load the model. Returns the mode that ended up being used. */
@@ -48,16 +63,14 @@ export class Voice {
       return this.mode;
     }
 
-    let webllm;
-    try {
-      webllm = await import(/* @vite-ignore */ WEBLLM_URL);
-    } catch (error) {
-      console.warn("web-llm failed to load", error);
+    const webllm = await this.warm();
+    if (!webllm) {
+      this.onProgress({ text: "The loader did not arrive. The shade will answer.", ratio: 1 });
       this.mode = "shade";
       return this.mode;
     }
 
-    for (const candidate of MODELS) {
+    for (const candidate of this.candidates) {
       try {
         this.onProgress({ text: `Waking ${candidate.size}`, ratio: 0 });
         this.engine = await webllm.CreateMLCEngine(candidate.id, {
