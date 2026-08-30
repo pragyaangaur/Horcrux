@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>HORCRUX — the diary that writes back</title>
+<meta name="description" content="A blank diary that answers in ink. A small language model runs entirely in your browser and replies in the voice of Tom Riddle." />
+<meta name="theme-color" content="#120d0a" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23120d0a'/%3E%3Cpath d='M32 12c7 8 12 13 12 22a12 12 0 0 1-24 0c0-9 5-14 12-22z' fill='%23e8e2d0'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Caveat:wght@500;600&family=Petit+Formal+Script&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/diary.css" />
+</head>
+<body>
+
+<div class="candle" aria-hidden="true"></div>
+
+<main class="desk">
+  <article class="diary" id="diary">
+    <div class="spine" aria-hidden="true"></div>
+
+    <!-- Left page: what the ink remembers -->
+    <section class="page page--left" aria-label="Memories">
+      <header class="plate">
+        <h1 class="title">Horcrux</h1>
+        <p class="subtitle">T. M. Riddle &middot; Vauxhall Road, London</p>
+      </header>
+
+      <div class="memories" id="memories" aria-live="off">
+        <p class="memories__empty" id="memoriesEmpty">Nothing has been written here for fifty years.</p>
+      </div>
+
+      <footer class="plate plate--foot">
+        <div class="lamp" id="lamp" data-state="dormant"><span class="lamp__dot"></span><span class="lamp__text">dormant</span></div>
+      </footer>
+    </section>
+
+    <!-- Right page: the living surface -->
+    <section class="page page--right" aria-label="The page">
+      <div class="surface" id="surface">
+        <div class="surface__scroll" id="stage"></div>
+      </div>
+
+      <form class="quill" id="quill" autocomplete="off">
+        <label class="visually-hidden" for="pen">Write in the diary</label>
+        <textarea id="pen" class="quill__pen" rows="1" maxlength="600" placeholder="Write something. Anything." spellcheck="false"></textarea>
+        <button class="quill__ink" id="send" type="submit" title="Press the ink into the page">
+          <span class="quill__blot" aria-hidden="true"></span>
+          <span class="visually-hidden">Send</span>
+        </button>
+      </form>
+    </section>
+  </article>
+
+  <nav class="rail" aria-label="Controls">
+    <button class="rail__btn" id="awaken" type="button">Open the diary</button>
+    <button class="rail__btn rail__btn--ghost" id="forget" type="button" title="Burn the page">Forget me</button>
+    <button class="rail__btn rail__btn--ghost" id="soundBtn" type="button" aria-pressed="false" title="Quill and candle">Sound: off</button>
+    <div class="rail__meter" id="meter" hidden><div class="rail__fill" id="meterFill"></div><span class="rail__label" id="meterLabel"></span></div>
+  </nav>
+</main>
+
+<p class="colophon">A work of fanfiction. Everything on this page is invented by a small model running in your own browser, and nothing leaves your machine.</p>
+
+</body>
+</html>

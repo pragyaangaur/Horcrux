@@ -1,0 +1,141 @@
+/* Base layout for the desk and the open book. */
+
+:root {
+  --ink: #1b2440;
+  --ink-faint: rgba(27, 36, 64, 0.34);
+  --parchment: #e7dcc0;
+  --parchment-deep: #cfc09b;
+  --leather: #2a1a12;
+  --dark: #120d0a;
+  --gold: #c9a227;
+  --page-w: min(46vw, 560px);
+  --page-h: min(78vh, 760px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(120% 90% at 50% 10%, #2b1d15 0%, var(--dark) 55%, #060403 100%);
+  color: var(--parchment);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  overflow: hidden;
+}
+
+.desk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.diary {
+  position: relative;
+  display: flex;
+  border-radius: 6px;
+  background: var(--leather);
+  padding: 14px;
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.75);
+}
+
+.spine {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  bottom: 8px;
+  width: 26px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.page {
+  position: relative;
+  width: var(--page-w);
+  height: var(--page-h);
+  padding: 2.2rem 2rem;
+  color: var(--ink);
+  background: var(--parchment);
+  display: flex;
+  flex-direction: column;
+}
+
+.page--left { border-radius: 4px 0 0 4px; }
+.page--right { border-radius: 0 4px 4px 0; }
+
+.title {
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0.2rem 0 0;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.memories { flex: 1; overflow-y: auto; margin: 1.4rem 0; }
+.memories__empty { font-style: italic; opacity: 0.5; }
+
+.surface { flex: 1; overflow-y: auto; }
+
+.quill { display: flex; gap: 0.75rem; align-items: flex-end; }
+
+.quill__pen {
+  flex: 1;
+  resize: none;
+  border: 0;
+  border-bottom: 1px solid var(--ink-faint);
+  background: transparent;
+  color: var(--ink);
+  font-family: "Caveat", cursive;
+  font-size: 1.5rem;
+  padding: 0.4rem 0;
+  outline: none;
+}
+
+.rail { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+
+.rail__btn {
+  font-family: inherit;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--parchment);
+  background: transparent;
+  border: 1px solid rgba(231, 220, 192, 0.3);
+  border-radius: 2px;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+}
+
+.colophon {
+  max-width: 60ch;
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.45;
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
