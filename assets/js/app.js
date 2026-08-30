@@ -77,6 +77,7 @@ async function open() {
 
   const hello = await scribe.say("riddle", anyOf(OPENING));
   cry(hello.text);
+  pending.push({ el: hello.el, kind: "riddle", text: hello.text });
   lock(false);
   dom.pen.focus();
 }

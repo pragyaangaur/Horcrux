@@ -3,7 +3,7 @@
    the browser tab on WebGPU. If that is not possible, the Shade answers instead, so the
    diary is never silent. */
 
-import { SYSTEM_PROMPT, Shade } from "./persona.js";
+import { SYSTEM_PROMPT, PRIMER, Shade } from "./persona.js";
 
 const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm";
 
@@ -98,6 +98,7 @@ export class Riddle {
 
     const messages = [
       { role: "system", content: SYSTEM_PROMPT },
+      ...PRIMER,
       ...this.history.slice(-TURNS),
       { role: "user", content: text }
     ];
