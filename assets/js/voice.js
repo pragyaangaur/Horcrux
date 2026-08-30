@@ -7,15 +7,22 @@ import { SYSTEM_PROMPT, PRIMER, Shade } from "./persona.js";
 
 const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm";
 
-/* The first load is the slow part, so the default is the smallest model that still holds
-   a character. The deeper one writes better and costs twice the download, and it is only
-   used when the reader asks for it. */
-export const MODELS = [
-  { id: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", size: "about 400 MB" },
-  { id: "SmolLM2-360M-Instruct-q4f16_1-MLC", size: "about 250 MB" }
+/* Three sizes of the same character. Bigger models write better and take longer to arrive,
+   and the reader picks which trade they want. Sizes are the rough download in megabytes. */
+export const VOICES = [
+  { name: "light", id: "SmolLM2-360M-Instruct-q4f16_1-MLC", megabytes: 250 },
+  { name: "normal", id: "Qwen2.5-0.5B-Instruct-q4f16_1-MLC", megabytes: 400 },
+  { name: "deep", id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", megabytes: 800 }
 ];
 
-export const DEEP_MODEL = { id: "Llama-3.2-1B-Instruct-q4f16_1-MLC", size: "about 800 MB" };
+export const DEFAULT_VOICE = "normal";
+
+/* The chosen size first, then the smaller ones, so a failed load falls back to a cheaper try. */
+function order(name) {
+  const chosen = VOICES.find((voice) => voice.name === name) || VOICES.find((voice) => voice.name === DEFAULT_VOICE);
+  const rest = VOICES.filter((voice) => voice !== chosen && voice.megabytes < chosen.megabytes);
+  return [chosen, ...rest.reverse()];
+}
 
 const TURNS = 8;
 
@@ -29,10 +36,10 @@ export function looksLikeCrisis(text) {
 export const CRISIS_REPLY = "I am stopping the game here. I am only a page in a book, and this part is real. Please talk to someone you trust tonight, or call a local crisis line, and stay near people who know your name.";
 
 export class Voice {
-  constructor({ onProgress, onReady, deep = false } = {}) {
+  constructor({ onProgress, onReady, size = DEFAULT_VOICE } = {}) {
     this.onProgress = onProgress || (() => {});
     this.onReady = onReady || (() => {});
-    this.candidates = deep ? [DEEP_MODEL, ...MODELS] : MODELS;
+    this.candidates = order(size);
     this.engine = null;
     this.mode = "asleep";
     this.model = null;
@@ -81,7 +88,7 @@ export class Voice {
 
     for (const candidate of this.candidates) {
       try {
-        this.onProgress({ text: `Waking ${candidate.size}`, ratio: 0 });
+        this.onProgress({ text: `Waking about ${candidate.megabytes} MB`, ratio: 0 });
         this.engine = await webllm.CreateMLCEngine(candidate.id, {
           initProgressCallback: (report) => {
             this.onProgress({ text: report.text, ratio: report.progress ?? 0 });

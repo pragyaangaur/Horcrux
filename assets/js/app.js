@@ -1,7 +1,7 @@
 /* Wiring. The page, the ink and the thing in the book are joined together here. */
 
 import { Scribe, growWithText } from "./ink.js";
-import { Voice } from "./voice.js";
+import { Voice, VOICES, DEFAULT_VOICE } from "./voice.js";
 import { OPENING, WAKING, anyOf } from "./persona.js";
 
 const el = (id) => document.getElementById(id);
@@ -32,8 +32,8 @@ const PLACEHOLDERS = {
 };
 
 const scribe = new Scribe(dom.stage);
-const deep = new URLSearchParams(location.search).get("voice") === "deep";
-const voice = new Voice({ onProgress: showProgress, onReady: takeOver, deep });
+const size = chosenSize();
+const voice = new Voice({ onProgress: showProgress, onReady: takeOver, size });
 
 let busy = false;
 let opened = false;
@@ -44,7 +44,7 @@ let handover = false;
 setLamp("dormant");
 lock(true);
 growWithText(dom.pen);
-dom.deep.textContent = deep ? "Lighter voice" : "Deeper voice";
+dom.deep.textContent = `Voice: ${size}`;
 warmLater();
 scribe.say("note", "The page is blank. It has been blank for a very long time.");
 
@@ -182,11 +182,18 @@ function warmLater() {
   else setTimeout(start, 1200);
 }
 
-/* The two sizes are a page reload apart, because the model is chosen before it loads. */
+/* The size lives in the address, so a link can carry it and a reload keeps it. */
+function chosenSize() {
+  const asked = new URLSearchParams(location.search).get("voice");
+  return VOICES.some((entry) => entry.name === asked) ? asked : DEFAULT_VOICE;
+}
+
+/* The sizes are a page reload apart, because the model is chosen before it loads. */
 function switchVoice() {
+  const names = VOICES.map((entry) => entry.name);
+  const next = names[(names.indexOf(size) + 1) % names.length];
   const url = new URL(location.href);
-  if (deep) url.searchParams.delete("voice");
-  else url.searchParams.set("voice", "deep");
+  url.searchParams.set("voice", next);
   location.href = url.toString();
 }
 
