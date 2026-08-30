@@ -10,11 +10,13 @@ const FACT = /\b(i am|i'm|im|i live|i study|i work|i have|i like|i love|i hate|i
 
 const LIMIT = 8;
 const LENGTH = 110;
+const KEY = "horcrux.ledger";
 
 export class Ledger {
   constructor() {
     this.name = null;
     this.facts = [];
+    this.load();
   }
 
   /* Read one line from the writer and keep the parts that say something about them. */
@@ -33,6 +35,7 @@ export class Ledger {
     }
 
     while (this.facts.length > LIMIT) this.facts.shift();
+    this.save();
   }
 
   /* The block that goes into the prompt. An empty string when there is nothing to say. */
@@ -44,5 +47,33 @@ export class Ledger {
   forget() {
     this.name = null;
     this.facts = [];
+    try {
+      localStorage.removeItem(KEY);
+    } catch (error) {
+      /* Storage can be switched off. There is nothing to clean up in that case. */
+    }
+  }
+
+  /* The note lives in this browser only. It is never sent anywhere, and Forget me wipes it.
+     Storage throws in a private window or when the reader has blocked it, so every call is
+     wrapped and the diary simply starts fresh when that happens. */
+  load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (!saved) return;
+      this.name = typeof saved.name === "string" ? saved.name : null;
+      this.facts = Array.isArray(saved.facts) ? saved.facts.filter((fact) => typeof fact === "string").slice(-LIMIT) : [];
+    } catch (error) {
+      this.name = null;
+      this.facts = [];
+    }
+  }
+
+  save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ name: this.name, facts: this.facts }));
+    } catch (error) {
+      /* Nothing is lost that matters. The note still works for this visit. */
+    }
   }
 }
