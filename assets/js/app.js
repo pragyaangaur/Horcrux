@@ -33,7 +33,7 @@ const PLACEHOLDERS = {
 
 const scribe = new Scribe(dom.stage);
 const deep = new URLSearchParams(location.search).get("voice") === "deep";
-const voice = new Voice({ onProgress: showProgress, deep });
+const voice = new Voice({ onProgress: showProgress, onReady: () => {}, deep });
 
 let busy = false;
 let opened = false;
@@ -68,15 +68,14 @@ async function open() {
   dom.awaken.textContent = "Opening";
   dom.diary.classList.remove("is-shut");
   setLamp("stirring");
-  dom.meter.hidden = false;
 
   dom.stage.replaceChildren();
   await scribe.say("note", anyOf(WAKING));
 
-  const mode = await voice.awaken();
-  dom.meter.hidden = true;
+  /* The book is open from here. Whatever the model is doing happens behind the page. */
+  voice.open();
   setLamp("awake");
-  dom.awaken.textContent = mode === "model" ? "The diary is open" : "The shade is listening";
+  dom.awaken.textContent = "The diary is open";
 
   const first = dom.stage.querySelector(".line--note");
   if (first) scribe.sink(first, 200);
@@ -181,7 +180,11 @@ function toggleSound() {
   dom.sound.setAttribute("aria-pressed", String(sound));
 }
 
-function showProgress({ text, ratio }) {
+function showProgress({ text, ratio, done }) {
+  if (done) {
+    dom.meter.hidden = true;
+    return;
+  }
   dom.meter.hidden = false;
   dom.meterFill.style.width = `${Math.round((ratio || 0) * 100)}%`;
   dom.meterLabel.textContent = shorten(text);

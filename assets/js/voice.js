@@ -1,7 +1,7 @@
 /* The thing in the book.
-   The first choice is a small language model that downloads once and then runs inside
-   the browser tab on WebGPU. If that is not possible, the Shade answers instead, so the
-   diary is never silent. */
+   The book opens on the Shade, which is a small pattern matcher that can answer at once.
+   A language model downloads in the background and takes over when it arrives. If it never
+   arrives, because there is no WebGPU or the fetch fails, the Shade keeps the diary going. */
 
 import { SYSTEM_PROMPT, PRIMER, Shade } from "./persona.js";
 
@@ -29,8 +29,9 @@ export function looksLikeCrisis(text) {
 export const CRISIS_REPLY = "I am stopping the game here. I am only a page in a book, and this part is real. Please talk to someone you trust tonight, or call a local crisis line, and stay near people who know your name.";
 
 export class Voice {
-  constructor({ onProgress, deep = false } = {}) {
+  constructor({ onProgress, onReady, deep = false } = {}) {
     this.onProgress = onProgress || (() => {});
+    this.onReady = onReady || (() => {});
     this.candidates = deep ? [DEEP_MODEL, ...MODELS] : MODELS;
     this.engine = null;
     this.mode = "asleep";
@@ -53,19 +54,27 @@ export class Voice {
     return this.library;
   }
 
-  /* Load the model. Returns the mode that ended up being used. */
-  async awaken() {
-    if (this.ready) return this.mode;
+  /* Open the book without waiting for anything. The Shade answers from the first line and
+     the model is fetched behind it, because nobody should watch a download to say hello. */
+  open() {
+    if (this.mode === "asleep") this.mode = "shade";
+    this.loading = this.loading || this.load();
+    return this.mode;
+  }
+
+  /* Fetch the model and switch to it when it is there. Returns the mode that ended up in use. */
+  async load() {
+    if (this.mode === "model") return this.mode;
 
     if (!navigator.gpu) {
-      this.onProgress({ text: "No WebGPU here. The shade will answer instead.", ratio: 1 });
+      this.onProgress({ text: "No WebGPU here. The shade will answer instead.", ratio: 1, done: true });
       this.mode = "shade";
       return this.mode;
     }
 
     const webllm = await this.warm();
     if (!webllm) {
-      this.onProgress({ text: "The loader did not arrive. The shade will answer.", ratio: 1 });
+      this.onProgress({ text: "The loader did not arrive. The shade will answer.", ratio: 1, done: true });
       this.mode = "shade";
       return this.mode;
     }
@@ -80,13 +89,15 @@ export class Voice {
         });
         this.model = candidate.id;
         this.mode = "model";
+        this.onProgress({ text: "", ratio: 1, done: true });
+        this.onReady(candidate);
         return this.mode;
       } catch (error) {
         console.warn(`could not load ${candidate.id}`, error);
       }
     }
 
-    this.onProgress({ text: "The model would not load. The shade will answer.", ratio: 1 });
+    this.onProgress({ text: "The model would not load. The shade will answer.", ratio: 1, done: true });
     this.mode = "shade";
     return this.mode;
   }
