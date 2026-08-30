@@ -56,7 +56,7 @@ dom.awaken.addEventListener("click", open);
    start arriving a second or two before the click. */
 dom.awaken.addEventListener("pointerenter", () => voice.start(), { once: true });
 dom.awaken.addEventListener("focus", () => voice.start(), { once: true });
-dom.forget.addEventListener("click", burn);
+dom.forget.addEventListener("click", askToBurn);
 dom.sound.addEventListener("click", toggleSound);
 dom.deep.addEventListener("click", switchVoice);
 dom.quill.addEventListener("submit", submit);
@@ -167,6 +167,25 @@ function remember(kind, text) {
   p.textContent = text;
   dom.memories.appendChild(p);
   dom.memories.scrollTop = dom.memories.scrollHeight;
+}
+
+/* Forgetting throws away the note the book keeps between visits, so it asks once. The armed
+   state falls away on its own if the reader was only passing over the button. */
+let armed = null;
+
+function askToBurn() {
+  if (armed) {
+    clearTimeout(armed);
+    armed = null;
+    dom.forget.textContent = "Forget me";
+    burn();
+    return;
+  }
+  dom.forget.textContent = "Press again";
+  armed = setTimeout(() => {
+    armed = null;
+    dom.forget.textContent = "Forget me";
+  }, 4000);
 }
 
 function burn() {
