@@ -33,12 +33,13 @@ const PLACEHOLDERS = {
 
 const scribe = new Scribe(dom.stage);
 const deep = new URLSearchParams(location.search).get("voice") === "deep";
-const voice = new Voice({ onProgress: showProgress, onReady: () => {}, deep });
+const voice = new Voice({ onProgress: showProgress, onReady: takeOver, deep });
 
 let busy = false;
 let opened = false;
 let sound = false;
 let pending = [];
+let handover = false;
 
 setLamp("dormant");
 lock(true);
@@ -122,6 +123,22 @@ async function submit(event) {
   busy = false;
   lock(false);
   dom.pen.focus();
+  flushHandover();
+}
+
+/* The model can finish downloading at any moment, including in the middle of a reply.
+   The page says so once, quietly, and never while a line is being written. */
+function takeOver(model) {
+  handover = true;
+  dom.awaken.title = model?.id || "";
+  if (!busy && opened) flushHandover();
+}
+
+async function flushHandover() {
+  if (!handover || busy) return;
+  handover = false;
+  const note = await scribe.say("note", "The ink darkens. Something older is writing now.");
+  scribe.sink(note.el, 2200);
 }
 
 function sinkPending() {
