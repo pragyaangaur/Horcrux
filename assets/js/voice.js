@@ -25,7 +25,9 @@ function order(name) {
   return [chosen, ...rest.reverse()];
 }
 
-const TURNS = 8;
+/* How much of the conversation goes back to the model on every question. Twenty messages is
+   ten exchanges, which these models have room for, and the ledger carries anything older. */
+const MESSAGES = 20;
 
 /* The first few words of a reply are held back before they reach the page. It is the only
    place a small model steals the writer's name, and once ink is on the page it stays. */
@@ -150,7 +152,7 @@ export class Voice {
     const messages = [
       { role: "system", content: `${SYSTEM_PROMPT}\n\n${reminder(this.writer, this.ledger.note())}` },
       ...PRIMER,
-      ...this.history.slice(-TURNS),
+      ...this.history.slice(-MESSAGES),
       { role: "user", content: text }
     ];
 
@@ -200,7 +202,7 @@ export class Voice {
   remember(user, assistant) {
     this.history.push({ role: "user", content: user });
     this.history.push({ role: "assistant", content: assistant });
-    if (this.history.length > TURNS * 2) this.history = this.history.slice(-TURNS * 2);
+    if (this.history.length > MESSAGES) this.history = this.history.slice(-MESSAGES);
   }
 
   forget() {
