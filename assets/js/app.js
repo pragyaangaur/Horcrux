@@ -33,6 +33,7 @@ const PLACEHOLDERS = {
 
 const scribe = new Scribe(dom.stage);
 const size = chosenSize();
+const weight = VOICES.find((entry) => entry.name === size).megabytes;
 const voice = new Voice({ onProgress: showProgress, onReady: takeOver, size });
 
 let busy = false;
@@ -209,18 +210,18 @@ function showProgress({ text, ratio, done }) {
     dom.meter.hidden = true;
     return;
   }
+  const percent = Math.round((ratio || 0) * 100);
   dom.meter.hidden = false;
-  dom.meterFill.style.width = `${Math.round((ratio || 0) * 100)}%`;
-  dom.meterLabel.textContent = shorten(text);
+  dom.meterFill.style.width = `${percent}%`;
+  dom.meter.setAttribute("aria-valuenow", String(percent));
+  dom.meterLabel.textContent = shorten(text, percent);
 }
 
-/* The loader is chatty. Keep the label to something that fits on the bar. */
-function shorten(text) {
+/* The loader is chatty and counts files, which means nothing to a reader. The bar says how
+   much of the download is done and how big the whole thing is. */
+function shorten(text, percent) {
   const line = String(text || "").replace(/\s+/g, " ").trim();
-  if (/fetch|cache|download/i.test(line)) {
-    const found = line.match(/\[(\d+)\/(\d+)\]/);
-    return found ? `Drawing the ink ${found[1]} of ${found[2]}` : "Drawing the ink";
-  }
+  if (/fetch|cache|download/i.test(line)) return `Drawing the ink, ${percent}% of about ${weight} MB`;
   if (/gpu|shader|load/i.test(line)) return "Settling into the paper";
   return line.slice(0, 46) || "Waking";
 }
