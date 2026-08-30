@@ -378,6 +378,19 @@ body {
 }
 
 .rail__btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Keyboard users need to see where they are. The ring uses the candle colour so that it
+   belongs to the page, and it only shows for keyboard focus. */
+.rail__btn:focus-visible,
+.quill__ink:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.quill__pen:focus-visible {
+  outline: none;
+  box-shadow: 0 2px 0 -1px var(--ink);
+}
 .rail__btn:disabled { opacity: 0.4; cursor: default; }
 .rail__btn--ghost { opacity: 0.62; font-size: 0.8rem; padding: 0.45rem 0.9rem; }
 
