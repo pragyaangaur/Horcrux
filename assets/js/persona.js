@@ -40,6 +40,13 @@ export const OPENING = [
   "I can feel the ink moving. Hello."
 ];
 
+/* For a reader the book has met before. The name is filled in from the ledger. */
+export const RETURNING = [
+  "You came back, {name}. The book kept every word you left here.",
+  "{name}. I wondered how long it would take you to open this again.",
+  "You again, {name}. I have had nothing to read since you left."
+];
+
 export const WAKING = [
   "The page is warm under your hand.",
   "Something in the ink is waking up.",

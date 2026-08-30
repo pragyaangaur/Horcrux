@@ -56,6 +56,11 @@ export class Voice {
     this.writer = null;
   }
 
+  /* The name the book already has for this reader, if it has met them before. */
+  get knows() {
+    return this.ledger.name;
+  }
+
   get ready() {
     return this.mode === "model" || this.mode === "shade";
   }

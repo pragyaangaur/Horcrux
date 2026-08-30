@@ -2,7 +2,7 @@
 
 import { Scribe, growWithText } from "./ink.js";
 import { Voice, VOICES, DEFAULT_VOICE } from "./voice.js";
-import { OPENING, WAKING, anyOf } from "./persona.js";
+import { OPENING, RETURNING, WAKING, anyOf } from "./persona.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -44,6 +44,7 @@ let handover = false;
 
 setLamp("dormant");
 lock(true);
+if (voice.knows) dom.memoriesEmpty.textContent = `The book remembers you, ${voice.knows}.`;
 growWithText(dom.pen);
 dom.deep.textContent = `Voice: ${size}`;
 warmLater();
@@ -87,7 +88,9 @@ async function open() {
   const first = dom.stage.querySelector(".line--note");
   if (first) scribe.sink(first, 200);
 
-  const hello = await scribe.say("voice", anyOf(OPENING));
+  const known = voice.knows;
+  const greeting = known ? anyOf(RETURNING).replace(/\{name\}/g, known) : anyOf(OPENING);
+  const hello = await scribe.say("voice", greeting);
   cry(hello.text);
   pending.push({ el: hello.el, kind: "voice", text: hello.text });
   lock(false);
