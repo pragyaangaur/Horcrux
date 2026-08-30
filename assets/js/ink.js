@@ -4,6 +4,9 @@
 
 const SPEED = { you: 16, voice: 34, note: 22 };
 
+/* Some readers ask the system for less movement. For them the words are simply there. */
+const STILL = window.matchMedia("(prefers-reduced-motion: reduce)");
+
 export class Scribe {
   constructor(stage) {
     this.stage = stage;
@@ -98,6 +101,7 @@ class Writer {
     this.text = "";
     this.drawn = "";
     this.done = false;
+    this.instant = STILL.matches;
     this.finished = new Promise((resolve) => { this.resolve = resolve; });
   }
 
@@ -105,7 +109,7 @@ class Writer {
     if (!chunk) return;
     this.text += chunk;
     for (const ch of chunk) this.queue.push(ch);
-    if (document.hidden) this.flush();
+    if (document.hidden || this.instant) this.flush();
     else if (!this.timer) this.tick();
   }
 
@@ -121,7 +125,7 @@ class Writer {
 
   close() {
     this.closed = true;
-    if (document.hidden) this.flush();
+    if (document.hidden || this.instant) this.flush();
     else if (!this.timer && this.queue.length === 0) this.end();
   }
 
